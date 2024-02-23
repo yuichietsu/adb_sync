@@ -5,11 +5,9 @@
     "license": "MIT",
     "require": {
         "menrui/menrui": "*"
-        "menrui/ccd2cue": "*"
     },
-    "scripts": {
-        "sync": "bin/sync.php"
-    },
+    "scripts": {},
+    "bin": ["bin/adb_sync"],
     "autoload": {
         "psr-4": {
             "Menrui\\": "src/"
