@@ -5,9 +5,7 @@ PCからAndroidにadbでファイルを転送するためのスクリプトで�
 ## インストール
 
 ```
-# git clone https://github.com/yuichietsu/adb_sync/
-# cd adb_sync
-# composer install
+# composer require menrui/adb_sync
 ```
 
 ## 使い方
@@ -15,7 +13,7 @@ PCからAndroidにadbでファイルを転送するためのスクリプトで�
 ### 比較
 
 ```
-# composer run sync -- diff /mnt/d/tmp/test 192.168.11.44:/storage/B42F-0FFA/test
+# vendor/bin/adb_sync diff /mnt/d/tmp/test 192.168.11.44:/storage/B42F-0FFA/test
 ```
 
 PCのみファイルがある場合
@@ -46,7 +44,7 @@ file1.txt
 ### 送信
 
 ```
-# composer run sync -- send /mnt/d/tmp/test 192.168.11.44:/storage/B42F-0FFA/test
+# vendor/bin/adb_sync send /mnt/d/tmp/test 192.168.11.44:/storage/B42F-0FFA/test
 ```
 
 - PCからAndroidにないファイルのみ送信する
@@ -54,7 +52,7 @@ file1.txt
 ### 更新
 
 ```
-# composer run sync -- update /mnt/d/tmp/test 192.168.11.44:/storage/B42F-0FFA/test
+# vendr/bin/adb_sync update /mnt/d/tmp/test 192.168.11.44:/storage/B42F-0FFA/test
 ```
 
 - PCからAndroidにないファイルを送信する。
@@ -63,7 +61,7 @@ file1.txt
 ### 同期
 
 ```
-# composer run sync -- sync /mnt/d/tmp/test 192.168.11.44:/storage/B42F-0FFA/test
+# vendor/bin/adb_sync sync /mnt/d/tmp/test 192.168.11.44:/storage/B42F-0FFA/test
 ```
 
 - PCからAndroidにないファイルを送信する。
