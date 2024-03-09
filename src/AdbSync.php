@@ -119,6 +119,11 @@ class AdbSync
         ]);
     }
 
+    protected function catRemote(string $path): string
+    {
+        return implode("\n", $this->execRemote(['cat', escapeshellarg($path)]));
+    }
+
     protected function checkRemotePath(string $path): void
     {
         if (!str_starts_with($path, $this->dstPath)) {
