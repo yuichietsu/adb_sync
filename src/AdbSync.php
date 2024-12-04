@@ -112,7 +112,7 @@ class AdbSync
             escapeshellarg($localPath),
         );
         $this->debug && $this->log($cmd);
-        return $this->retryExec($cmd);
+        return $this->retryExec($cmd, 'No such file or directory');
     }
 
     public function touchRemote(string $path, string $date): array
