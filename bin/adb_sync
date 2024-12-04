@@ -34,7 +34,7 @@ function parseArgs(array $argv): array
 {
     array_shift($argv);
 
-    $commands = ['diff', 'send', 'update', 'sync'];
+    $commands = ['diff', 'send', 'update', 'sync', 'receive', 'receiveAll'];
     $port = '5555';
     $remains = [];
 

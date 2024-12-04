@@ -102,6 +102,19 @@ class AdbSync
         return $this->retryExec($cmd);
     }
 
+    public function pull(string $localPath, string $remotePath): array
+    {
+        $this->checkRemotePath($remotePath);
+        $cmd = sprintf(
+            '%s pull -a %s %s',
+            $this->commands['adb'],
+            escapeshellarg($remotePath),
+            escapeshellarg($localPath),
+        );
+        $this->debug && $this->log($cmd);
+        return $this->retryExec($cmd);
+    }
+
     public function rmRemote(string $path): array
     {
         $this->checkRemotePath($path);
@@ -373,5 +386,45 @@ class AdbSync
             $this->log("[RMDIR] $path");
         }
         return [$srcList, $dstList];
+    }
+
+    private function pullFile(string $file): array
+    {
+        $src = $this->srcPath . "/$file";
+        $dst = $this->dstPath . "/$file";
+        $srcDir = dirname($src);
+        if ($srcDir !== $this->srcPath && !is_dir($srcDir)) {
+            mkdir($srcDir, 0777, true);
+        }
+        $this->pull($srcDir, $dst);
+        return [$src, $dst];
+    }
+
+    public function receive(): array
+    {
+        $this->checkPathSettings();
+        $srcList = $this->listLocal($this->srcPath, self::LIST_HASH);
+        $dstList = $this->listRemote($this->dstPath, self::LIST_HASH);
+        $dstOnly = array_keys(array_diff_key($dstList, $srcList));
+        foreach ($dstOnly as $file) {
+            [$src, $dst] = $this->pullFile($file);
+            $this->log("[SEND] $src => $dst");
+        }
+
+        $srcDirs = $this->dirsLocal($this->srcPath);
+        $dstDirs = $this->dirsRemote($this->dstPath);
+        $dstOnly = array_keys(array_diff_key($dstDirs, $srcDirs));
+        foreach ($dstOnly as $dir) {
+            $path = $this->srcPath . "/$dir";
+            mkdir($path, 0777, true);
+            $this->log("[MKDIR] $path");
+        }
+        return [$srcList, $dstList];
+    }
+
+    public function receiveAll(): void
+    {
+        $this->checkPathSettings();
+        $this->pull($this->srcPath, "{$this->dstPath}/.");
     }
 }
