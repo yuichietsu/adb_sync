@@ -388,7 +388,7 @@ class AdbSync
         return [$srcList, $dstList];
     }
 
-    private function pullFile(string $file): array
+    public function pullFile(string $file): array
     {
         $src = $this->srcPath . "/$file";
         $dst = $this->dstPath . "/$file";
