@@ -115,12 +115,17 @@ class AdbSync
         return $this->retryExec($cmd);
     }
 
+    public function touchRemote(string $path, string $date): array
+    {
+        $this->checkRemotePath($path);
+        return $this->execRemote(['touch', '-d', escapeshellarg($date), escapeshellarg($path)]);
+    }
+
     public function rmRemote(string $path): array
     {
         $this->checkRemotePath($path);
         return $this->execRemote(['rm', '-rf', escapeshellarg($path)]);
     }
-
 
     public function mkdirRemote(string $dir): array
     {
