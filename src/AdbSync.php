@@ -326,9 +326,9 @@ class AdbSync
         $this->printDiffList($diff, '[HASH NOT MATCH]');
     }
 
-    public function pushFile(string $file): array
+    public function pushFile(string $file, ?string $srcDir = null): array
     {
-        $src = $this->srcPath . "/$file";
+        $src = ($srcDir ?? $this->srcPath) . "/$file";
         $dst = $this->dstPath . "/$file";
         $dstDir = dirname($dst);
         if ($dstDir !== $this->dstPath) {
