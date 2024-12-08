@@ -59,15 +59,18 @@ class AdbSync
         }
     }
 
-    public function execRemote(array $args = [], ?string $exitCond = null): array
+    public function execRemote(array $args = [], string|array|null $exitCond = null): array
     {
         $cmd = sprintf('%s shell %s', $this->commands['adb'], escapeshellarg(implode(' ', $args)));
         $this->debug && $this->log($cmd);
         return $this->retryExec($cmd, $exitCond);
     }
 
-    private function retryExec(string $cmd, ?string $exitCond = null): array
+    private function retryExec(string $cmd, string|array|null $exitCond = null): array
     {
+        if (is_string($exitCond)) {
+            $exitCond = [$exitCond];
+        }
         for ($retry = 1; $retry <= $this->retryCount; $retry++) {
             $outputs = [];
             exec("$cmd 2>&1", $outputs, $ret);
@@ -78,8 +81,10 @@ class AdbSync
                 $this->log($outputs);
                 if ($exitCond !== null) {
                     foreach ($outputs as $output) {
-                        if (str_contains($output, $exitCond)) {
-                            throw new Exception("Exit condition met: $exitCond");
+                        foreach ($exitCond as $cond) {
+                            if (str_contains($output, $cond)) {
+                                throw new Exception("Exit condition met: $cond");
+                            }
                         }
                     }
                 }
@@ -113,6 +118,19 @@ class AdbSync
         );
         $this->debug && $this->log($cmd);
         return $this->retryExec($cmd, 'No such file or directory');
+    }
+
+    public function filemtimeRemote(string $path): array
+    {
+        $this->checkRemotePath($path);
+        return $this->execRemote([
+            'stat',
+            '-c "%Y %n"',
+            escapeshellarg($path),
+        ], [
+            'No such file or directory',
+            'Not a directory',
+        ]);
     }
 
     public function touchRemote(string $path, string $date): array
