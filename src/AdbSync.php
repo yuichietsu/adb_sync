@@ -120,10 +120,10 @@ class AdbSync
         return $this->retryExec($cmd, 'No such file or directory');
     }
 
-    public function filemtimeRemote(string $path): array
+    public function filemtimeRemote(string $path): int
     {
         $this->checkRemotePath($path);
-        return $this->execRemote([
+        $ret = $this->execRemote([
             'stat',
             '-c "%Y %n"',
             escapeshellarg($path),
@@ -131,6 +131,7 @@ class AdbSync
             'No such file or directory',
             'Not a directory',
         ]);
+        return (int)$ret[0];
     }
 
     public function touchRemote(string $path, string $date): array
