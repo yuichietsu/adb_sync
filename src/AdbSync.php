@@ -4,9 +4,9 @@ namespace Menrui;
 
 class AdbSync
 {
-    protected const LIST_NONE = 0;
-    protected const LIST_HASH = 1;
-    protected const LIST_DATE = 2;
+    public const LIST_NONE = 0;
+    public const LIST_HASH = 1;
+    public const LIST_DATE = 2;
 
     public bool $verbose = false;
     public bool $debug   = false;
@@ -176,13 +176,13 @@ class AdbSync
         return $this->listCore($scanDir, $lines, self::LIST_NONE);
     }
 
-    protected function listLocal(string $scanDir, int $mode = self::LIST_HASH): array
+    public function listLocal(string $scanDir, int $mode = self::LIST_HASH): array
     {
         $lines   = [];
         $args = match ($mode) {
             self::LIST_NONE => sprintf('%s -type f', escapeshellarg($scanDir)),
             self::LIST_HASH => sprintf('%s -type f -exec md5sum {} \;', escapeshellarg($scanDir)),
-            self::LIST_DATE => sprintf('%s -type f -exec stat -c "%Y %n" {} \;', escapeshellarg($scanDir)),
+            self::LIST_DATE => sprintf('%s -type f -exec stat -c "%%Y %%n" {} \;', escapeshellarg($scanDir)),
         };
         $cmd = "{$this->commands['find']} $args";
         exec($cmd, $lines, $ret);
@@ -192,7 +192,7 @@ class AdbSync
         return $this->listCore($scanDir, $lines, $mode);
     }
 
-    protected function listRemote(string $scanDir, int $mode = self::LIST_HASH): array
+    public function listRemote(string $scanDir, int $mode = self::LIST_HASH): array
     {
         $cmd = match ($mode) {
             self::LIST_NONE => [
