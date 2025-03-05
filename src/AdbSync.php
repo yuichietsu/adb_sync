@@ -19,9 +19,10 @@ class AdbSync
     public ?\Closure $logger = null;
 
     public array $commands = [
-        'adb'  => 'adb',
-        'find' => 'find',
-        'rm'   => 'rm',
+        'adb'     => 'adb',
+        'find'    => 'find',
+        'rm'      => 'rm',
+        'md5deep' => 'md5deep',
     ];
 
     public function __construct(
@@ -197,13 +198,19 @@ class AdbSync
 
     public function listLocal(string $scanDir, int $mode = self::LIST_HASH): array
     {
-        $lines   = [];
-        $args = match ($mode) {
-            self::LIST_NONE => sprintf('%s -type f', escapeshellarg($scanDir)),
-            self::LIST_HASH => sprintf('%s -type f -exec md5sum {} \;', escapeshellarg($scanDir)),
-            self::LIST_DATE => sprintf('%s -type f -exec stat -c "%%Y %%n" {} \;', escapeshellarg($scanDir)),
-        };
-        $cmd = "{$this->commands['find']} $args";
+        $md5deep = $this->commands['md5deep'];
+        if ($mode === self::LIST_HASH && $this->isExecutable($md5deep)) {
+            $cmd = "$md5deep -r " . escapeshellarg($scanDir);
+        } else {
+            $args = match ($mode) {
+                self::LIST_NONE => sprintf('%s -type f', escapeshellarg($scanDir)),
+                self::LIST_HASH => sprintf('%s -type f -exec md5sum {} \;', escapeshellarg($scanDir)),
+                self::LIST_DATE => sprintf('%s -type f -exec stat -c "%%Y %%n" {} \;', escapeshellarg($scanDir)),
+            };
+            $cmd = "{$this->commands['find']} $args";
+        }
+
+        $lines = [];
         exec($cmd, $lines, $ret);
         if ($ret !== 0) {
             throw new Exception($cmd);
@@ -450,5 +457,10 @@ class AdbSync
     {
         $this->checkPathSettings();
         $this->pull($this->srcPath, "{$this->dstPath}/.");
+    }
+
+    public function isExecutable(string $command): bool
+    {
+        return false !== exec('which ' . escapeshellarg($command));
     }
 }
