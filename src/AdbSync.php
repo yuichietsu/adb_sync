@@ -23,6 +23,7 @@ class AdbSync
         'find'    => 'find',
         'rm'      => 'rm',
         'md5deep' => 'md5deep',
+        'md5sum'  => null,
     ];
 
     public function __construct(
@@ -307,12 +308,22 @@ class AdbSync
 
     protected function md5Local(string $path): string
     {
-        return md5(file_get_contents($path));
+        $md5sum = $this->commands['md5sum'];
+        if ($md5sum && $this->isExecutable($md5sum)) {
+            $cmd = sprintf('%s %s', $md5sum, escapeshellarg($path));
+            exec($cmd, $lines, $ret);
+            if ($ret !== 0) {
+                throw new Exception($cmd);
+            }
+            return current(explode(' ', current($lines)));
+        } else {
+            return md5(file_get_contents($path));
+        }
     }
 
     protected function md5Remote(string $path): string
     {
-        return implode($this->execRemote(['md5sum', '-b', escapeshellarg($path)]));
+        return current(explode(' ', current($this->execRemote(['md5sum', escapeshellarg($path)]))));
     }
 
     private function printDiffList(array $list, string $title = null, string $prefix = '', string $suffix = ''): void
