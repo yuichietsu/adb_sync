@@ -241,7 +241,7 @@ class AdbSync
                     $path,
                     $mtime,
                     $size,
-                    $this->md5Remote(...)
+                    $this->md5RemoteCore(...)
                 );
                 return "$md5  $path";
             }, $lines);
@@ -355,6 +355,33 @@ class AdbSync
     }
 
     protected function md5Remote(string $path): string
+    {
+        if (is_callable($this->remoteHashCacheFunc)) {
+            $cmd = [
+                'find',
+                escapeshellarg($path),
+                '-type f',
+                '-printf "%T@ %s\n"',
+            ];
+            $lines = $this->execRemote($cmd, 'No such file or directory');
+            $line  = current($lines);
+            $data  = explode(' ', $line);
+            $mtime = (int)array_shift($data);
+            $size  = (int)array_shift($data);
+            $md5   = call_user_func(
+                $this->remoteHashCacheFunc,
+                $path,
+                $mtime,
+                $size,
+                $this->md5RemoteCore(...)
+            );
+        } else {
+            $md5 = $this->md5RemoteCore($path);
+        }
+        return $md5;
+    }
+
+    protected function md5RemoteCore(string $path): string
     {
         return current(explode(' ', current($this->execRemote(['md5sum', escapeshellarg($path)]))));
     }
