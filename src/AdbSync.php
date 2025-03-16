@@ -26,6 +26,8 @@ class AdbSync
         'md5sum'  => null,
     ];
 
+    public ?\Closure $remoteHashCacheFunc = null;
+
     public function __construct(
         protected string $remote,
     ) {
@@ -221,33 +223,57 @@ class AdbSync
 
     public function listRemote(string $scanDir, int $mode = self::LIST_HASH): array
     {
-        $cmd = match ($mode) {
-            self::LIST_NONE => [
+        if ($mode === self::LIST_HASH && is_callable($this->remoteHashCacheFunc)) {
+            $cmd = [
                 'find',
                 escapeshellarg($scanDir),
                 '-type f',
-            ],
-            self::LIST_HASH => [
-                'find',
-                escapeshellarg($scanDir),
-                '-type f',
-                '-exec md5sum {} \;'
-            ],
-            self::LIST_DATE => [
-                'find',
-                escapeshellarg($scanDir),
-                '-type f',
-                '-printf "%T@ %p\n"',
-            ],
-        };
-        $lines = $this->execRemote($cmd, 'No such file or directory');
-        $lines = match ($mode) {
-            self::LIST_DATE => array_map(
-                fn ($v) => preg_replace('/^([0-9]+)\\.[0-9]+/', '\\1', $v),
-                $lines
-            ),
-            default => $lines,
-        };
+                '-printf "%T@ %s %p\n"',
+            ];
+            $lines = $this->execRemote($cmd, 'No such file or directory');
+            $lines = array_map(function ($line) {
+                $data  = explode(' ', $line);
+                $mtime = (int)array_shift($data);
+                $size  = (int)array_shift($data);
+                $path  = implode(' ', $data);
+                $md5   = call_user_func(
+                    $this->remoteHashCacheFunc,
+                    $path,
+                    $mtime,
+                    $size,
+                    $this->md5Remote(...)
+                );
+                return "$md5  $path";
+            }, $lines);
+        } else {
+            $cmd = match ($mode) {
+                self::LIST_NONE => [
+                    'find',
+                    escapeshellarg($scanDir),
+                    '-type f',
+                ],
+                self::LIST_HASH => [
+                    'find',
+                    escapeshellarg($scanDir),
+                    '-type f',
+                    '-exec md5sum {} \;'
+                ],
+                self::LIST_DATE => [
+                    'find',
+                    escapeshellarg($scanDir),
+                    '-type f',
+                    '-printf "%T@ %p\n"',
+                ],
+            };
+            $lines = $this->execRemote($cmd, 'No such file or directory');
+            $lines = match ($mode) {
+                self::LIST_DATE => array_map(
+                    fn ($v) => preg_replace('/^([0-9]+)\\.[0-9]+/', '\\1', $v),
+                    $lines
+                ),
+                default => $lines,
+            };
+        }
         return $this->listCore($scanDir, $lines, $mode);
     }
 
