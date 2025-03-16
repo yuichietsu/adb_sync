@@ -237,10 +237,17 @@ class AdbSync
                 'find',
                 escapeshellarg($scanDir),
                 '-type f',
-                "-exec stat -c '%Y %n' {} \;",
+                '-printf "%T@ %p\n"',
             ],
         };
         $lines = $this->execRemote($cmd, 'No such file or directory');
+        $lines = match ($mode) {
+            self::LIST_DATE => array_map(
+                fn ($v) => preg_replace('/^([0-9]+)\\.[0-9]+/', '\\1', $v),
+                $lines
+            ),
+            default => $lines,
+        };
         return $this->listCore($scanDir, $lines, $mode);
     }
 
