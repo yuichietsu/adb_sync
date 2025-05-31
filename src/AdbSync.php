@@ -386,7 +386,7 @@ class AdbSync
         return current(explode(' ', current($this->execRemote(['md5sum', escapeshellarg($path)]))));
     }
 
-    private function printDiffList(array $list, string $title = null, string $prefix = '', string $suffix = ''): void
+    private function printDiffList(array $list, ?string $title = null, string $prefix = '', string $suffix = ''): void
     {
         if (count($list) > 0) {
             $title && $this->log($title);
