@@ -1,5 +1,6 @@
 {
     "name": "menrui/adb_sync",
+	"version": "0.1.4",
     "description": "send files to android using adb",
     "type": "project",
     "license": "MIT",
