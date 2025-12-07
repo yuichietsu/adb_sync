@@ -153,13 +153,13 @@ class AdbSync
     public function existsRemote(string $path): bool
     {
         $this->checkRemotePath($path);
-        $this->execRemote([
+        $ret = $this->execRemote([
             'test',
             '-f',
             escapeshellarg($path),
-            '|| ( echo "NOT_FOUND" && exit 1 )',
-        ], 'NOT_FOUND');
-        return true;
+            '|| echo "NOT_FOUND"',
+        ]);
+        return ($ret[0] ?? '') !== 'NOT_FOUND';
     }
 
     public function mkdirRemote(string $dir): array
